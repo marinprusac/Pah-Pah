@@ -14,8 +14,6 @@ namespace Netcode.UI
         [SerializeField] private CreateLobbyUI createLobbyUI;
         [SerializeField] private JoinLobbyUI joinLobbyUI;
         
-        [SerializeField] private LobbyManager lobbyManager;
-
         private void OnEnable()
         {
             hostButton.onClick.AddListener(OnHost);
@@ -44,7 +42,7 @@ namespace Netcode.UI
 
         private void OnLogOut()
         {
-            lobbyManager.LogOut();
+            LobbyManager.Instance.LogOut();
             signInUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }

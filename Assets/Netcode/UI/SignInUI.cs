@@ -1,8 +1,6 @@
 using System;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Netcode.UI
@@ -17,9 +15,7 @@ namespace Netcode.UI
         private Button signInButton;
 
         [SerializeField] private MainMenuUI mainMenuUI;
-
-        [SerializeField] private LobbyManager lobbyManager;
-
+        
         private void OnEnable()
         {
             signInButton.onClick.AddListener(OnSignIn);
@@ -30,10 +26,16 @@ namespace Netcode.UI
             signInButton.onClick.RemoveAllListeners();
         }
 
+        private void Awake()
+        {
+            LobbyManager.Initialize();
+            RelayManager.Initialize();
+        }
+
         private void OnSignIn()
         {
             if (string.IsNullOrWhiteSpace(nameInput.text)) return;
-            lobbyManager.Authenticate(nameInput.text);
+            LobbyManager.Instance.Authenticate(nameInput.text);
             mainMenuUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }

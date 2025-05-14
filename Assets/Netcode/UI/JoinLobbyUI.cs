@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
-using Unity.Services.Lobbies;
-using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,14 +19,10 @@ namespace Netcode.UI
 
         [SerializeField] private MainMenuUI mainMenuUI;
         [SerializeField] private LobbyUI lobbyUI;
-
-        [SerializeField] private LobbyManager lobbyManager;
-
+        
         private const float RefreshTime = 5f;
         private float _refreshTimeLeft;
-
-        private readonly List<Lobby> _publicLobbies = new();
-
+        
         private void OnEnable()
         {
             try
@@ -79,20 +71,20 @@ namespace Netcode.UI
 
         private void OnJoinPrivateLobby()
         {
-            lobbyManager.onJoinedLobby.AddListener(OnJoinedLobby);
-            _ = lobbyManager.JoinLobbyWithCode(lobbyCodeInput.text);
+            LobbyManager.Instance.JoinedLobby += OnJoinedLobby;
+            _ = LobbyManager.Instance.JoinLobbyWithCode(lobbyCodeInput.text);
         }
 
 
         private void OnJoinPublicLobby(string lobbyId)
         {
-            lobbyManager.onJoinedLobby.AddListener(OnJoinedLobby);
-            _ = lobbyManager.JoinLobbyWithId(lobbyId);
+            LobbyManager.Instance.JoinedLobby += OnJoinedLobby;
+            _ = LobbyManager.Instance.JoinLobbyWithId(lobbyId);
         }
         
         private void OnJoinedLobby()
         {
-            lobbyManager.onJoinedLobby.RemoveListener(OnJoinedLobby);
+            LobbyManager.Instance.JoinedLobby -= OnJoinedLobby;
             lobbyUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }
@@ -110,7 +102,7 @@ namespace Netcode.UI
 
         private async Task RefreshPublicLobbies()
         {
-            var updatedLobbies = await lobbyManager.GetUpdatedLobbies();
+            var updatedLobbies = await LobbyManager.Instance.GetUpdatedLobbies();
             
             for (var i = 0; i < publicLobbiesSection.childCount; i++)
             {
@@ -125,7 +117,7 @@ namespace Netcode.UI
                 instantiate.transform.localPosition = i * 35 * Vector3.down;
                 var lobbyId = lobby.Id;
                 instantiate.joinLobbyButton.onClick.AddListener(() => OnJoinPublicLobby(lobbyId));
-                instantiate.lobbyNameText.text = lobby.Name;
+                instantiate.lobbyIdText.text = lobbyId;
             }
             
             

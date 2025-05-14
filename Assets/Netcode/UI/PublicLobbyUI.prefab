@@ -308,7 +308,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   joinLobbyButton: {fileID: 6231474121396468479}
-  lobbyNameText: {fileID: 4920659860023201103}
+  lobbyIdText: {fileID: 4920659860023201103}
 --- !u!1 &5509076392284541418
 GameObject:
   m_ObjectHideFlags: 0
@@ -321,7 +321,7 @@ GameObject:
   - component: {fileID: 4425037696301523217}
   - component: {fileID: 4920659860023201103}
   m_Layer: 5
-  m_Name: LobbyNameLabel
+  m_Name: LobbyId
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -374,7 +374,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Lobby Name
+  m_text: Lobby Id
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

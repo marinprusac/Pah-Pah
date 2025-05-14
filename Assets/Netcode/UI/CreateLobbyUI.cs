@@ -10,16 +10,12 @@ namespace Netcode.UI
     {
 
 
-        [SerializeField] private TMP_InputField lobbyName;
         [SerializeField] private Toggle toggleVisibility;
         [SerializeField] private Button createLobbyButton;
         [SerializeField] private Button goBackButton;
 
         [SerializeField] private MainMenuUI mainMenuUI;
         [SerializeField] private LobbyUI lobbyUI;
-
-        [SerializeField] private LobbyManager lobbyManager;
-
 
         private void OnEnable()
         {
@@ -35,13 +31,13 @@ namespace Netcode.UI
 
         private void OnCreateLobby()
         {
-            lobbyManager.onJoinedLobby.AddListener(OnLobbyCreated);
-            _ = lobbyManager.CreateLobby(lobbyName.text, toggleVisibility.isOn);
+            LobbyManager.Instance.JoinedLobby += OnLobbyCreated;
+            _ = LobbyManager.Instance.CreateLobby(toggleVisibility.isOn);
         }
 
         private void OnLobbyCreated()
         {
-            lobbyManager.onJoinedLobby.RemoveListener(OnLobbyCreated);
+            LobbyManager.Instance.JoinedLobby -= OnLobbyCreated;
             lobbyUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }
