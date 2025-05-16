@@ -38,7 +38,7 @@ namespace Netcode
         private bool _isLobbyPrivate;
         private string LobbyCode { get; set; }
         private string LobbyId { get; set; }
-        public bool AmIHost { get; private set; }
+        public bool AmHost { get; private set; }
         private Player HostPlayer { get; set; }
         private Player GuestPlayer { get; set; }
         private Timer _heartbeatTimer;
@@ -81,7 +81,7 @@ namespace Netcode
         {
             HostPlayer = null;
             GuestPlayer = null;
-            AmIHost = false;
+            AmHost = false;
         }
 
         private void GetLobbyData(Lobby lobby)
@@ -118,7 +118,16 @@ namespace Netcode
                 var startedData = dataChange["started"];
                 if (startedData.Changed && startedData.Value.Value == "true")
                 {
+                    GameStarted?.Invoke();
                     OnStarted();
+                }
+            };
+            callbacks.DataAdded += (dataAdded) =>
+            {
+                var relayCodeData = dataAdded["relayCode"];
+                if (relayCodeData.Added)
+                {
+                    RelayReady(relayCodeData.Value.Value);
                 }
             };
             LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
@@ -149,7 +158,7 @@ namespace Netcode
                 
                  var lobby = await LobbyService.Instance.CreateLobbyAsync(GUID.Generate().ToString(), 2, lobbyOptions);
                 
-                AmIHost = true;
+                AmHost = true;
                 GetLobbyData(lobby);
                 JoinedLobby?.Invoke();
                 _heartbeatTimer = new Timer(15000);
@@ -221,7 +230,7 @@ namespace Netcode
         {
             try
             {
-                if (AmIHost)
+                if (AmHost)
                 {
                     await LobbyService.Instance.DeleteLobbyAsync(LobbyId);
                     _heartbeatTimer?.Stop();
@@ -263,7 +272,18 @@ namespace Netcode
 
         private void OnStarted()
         {
-            GameStarted?.Invoke();
+            if (AmHost)
+            {
+                RelayManager.Instance.CreateRelay(LobbyId);
+            }
+        }
+
+        private void RelayReady(string relayCode)
+        {
+            if (!AmHost)
+            {
+                RelayManager.Instance.JoinRelay(LobbyId, relayCode);
+            }
         }
         
 

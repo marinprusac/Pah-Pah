@@ -1,6 +1,4 @@
-using System;
 using TMPro;
-using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,7 +21,7 @@ namespace Netcode.UI
         {
             leaveLobbyButton.onClick.AddListener(OnLeaveLobby);
             startGameButton.onClick.AddListener(OnStartGame);
-            startGameButton.interactable = LobbyManager.Instance.AmIHost;
+            startGameButton.interactable = LobbyManager.Instance.AmHost;
             var code = LobbyManager.Instance.CodeOrId;
             lobbyCodeLabel.text = code;
             firstPlayerLabel.text = LobbyManager.Instance.HostPlayerName;
@@ -31,6 +29,7 @@ namespace Netcode.UI
             LobbyManager.Instance.PlayerJoined += GuestJoined;
             LobbyManager.Instance.PlayerLeft += GuestLeft;
             LobbyManager.Instance.RemovedFromLobby += Removed;
+            LobbyManager.Instance.GameStarted += Started;
         }
 
         private void OnDisable()
@@ -66,6 +65,11 @@ namespace Netcode.UI
         private void OnStartGame()
         {
             LobbyManager.Instance.StartGame();
+        }
+
+        private void Started()
+        {
+            gameObject.SetActive(false);
         }
     }
 }

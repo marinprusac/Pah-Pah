@@ -34,7 +34,7 @@ namespace Netcode
         
         
         
-        private async void CreateRelay(string lobbyId)
+        public async void CreateRelay(string lobbyId)
         {
             try
             {
@@ -71,7 +71,7 @@ namespace Netcode
 
         }
 
-        private async void JoinRelay(string lobbyId, string relayCode)
+        public async void JoinRelay(string lobbyId, string relayCode)
         {
             try
             {

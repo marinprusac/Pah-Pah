@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Netcode
 {
-    public class PlayerObj : NetworkBehaviour
+    public class PlayerLogic : NetworkBehaviour
     {
 
         // Update is called once per frame
