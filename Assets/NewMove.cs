@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 public class NewMove : MonoBehaviour
 {
     public float speed = 5;
-    public float turnAroundSpeed = 5;
+    public float turnAroundSpeed = 1;
 
     public float gravity;
     public float jumpPower;
@@ -56,8 +56,6 @@ public class NewMove : MonoBehaviour
     {
         Movement();
         Look();
-        if(Grounded)
-            print(Grounded);
     }
 
     private void Movement()
@@ -75,7 +73,7 @@ public class NewMove : MonoBehaviour
 
     private void Look()
     {
-        var yaw = _inputSystem.Player.Look.ReadValue<float>() * Time.deltaTime * turnAroundSpeed;
+        var yaw = _inputSystem.Player.Look.ReadValue<float>() * turnAroundSpeed;
         transform.rotation = Quaternion.Euler( transform.rotation.eulerAngles + Vector3.up * yaw);
     }
 
