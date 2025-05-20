@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
@@ -10,31 +9,34 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 
-namespace Netcode
+namespace Managers
 {
     public class RelayManager
     {
-        
-        public static RelayManager Instance;
-        public static void Initialize()
+        private static RelayManager _instance;
+        private string _relayCode;
+
+        public static RelayManager Instance
         {
-            try
-            {
-                Instance = new RelayManager();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Unable initialize Unity services. Error: " + e.Message);
-            }
+            get => _instance ?? throw new Exception("RelayManager not initialized.");
+            private set => _instance = value;
         }
 
         private RelayManager()
         {
+            LobbyManager.Instance.SubscribeToDataChanged("relayCode", code =>
+            {
+                if(!LobbyManager.Instance.AmHost)
+                    JoinRelay(LobbyManager.Instance.LobbyId, code);
+            });
+        }
+
+        public static void Initialize()
+        {
+            Instance = new RelayManager();
         }
         
-        
-        
-        public async void CreateRelay(string lobbyId)
+        public static async void CreateRelay(string lobbyId)
         {
             try
             {
@@ -54,15 +56,16 @@ namespace Netcode
                 var relayCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
                 
                 await LobbyService.Instance.UpdatePlayerAsync(lobbyId, playerId, playerOptionsUpdate);
-                var lobbyOptionsUpdate = new UpdateLobbyOptions
-                {
-                    Data = new Dictionary<string, DataObject>
-                    {
-                        ["relayCode"] = new(DataObject.VisibilityOptions.Member, relayCode)
-                    }
-                };
-                await LobbyService.Instance.UpdateLobbyAsync(lobbyId, lobbyOptionsUpdate);
-
+                // var lobbyOptionsUpdate = new UpdateLobbyOptions
+                // {
+                //     Data = new Dictionary<string, DataObject>
+                //     {
+                //         ["relayCode"] = new(DataObject.VisibilityOptions.Member, relayCode)
+                //     }
+                // };
+                // await LobbyService.Instance.UpdateLobbyAsync(lobbyId, lobbyOptionsUpdate);
+                
+                LobbyManager.Instance.ChangeData("relayCode", relayCode);
             }
             catch (Exception e)
             {
@@ -71,7 +74,7 @@ namespace Netcode
 
         }
 
-        public async void JoinRelay(string lobbyId, string relayCode)
+        public static async void JoinRelay(string lobbyId, string relayCode)
         {
             try
             {
@@ -88,7 +91,7 @@ namespace Netcode
                 };
 
                 await LobbyService.Instance.UpdatePlayerAsync(lobbyId, playerId, updatedPlayerOptions);
-
+                GameManager.StartGame(false);
             }
             catch (Exception e)
             {

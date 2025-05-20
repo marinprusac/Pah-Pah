@@ -1,7 +1,9 @@
+using Managers;
+using Netcode.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Netcode.UI
+namespace Menu.UI
 {
     public class MainMenuUI : MonoBehaviour
     {
@@ -42,7 +44,7 @@ namespace Netcode.UI
 
         private void OnLogOut()
         {
-            LobbyManager.Instance.LogOut();
+            AuthenticationManager.SignOut();
             signInUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }

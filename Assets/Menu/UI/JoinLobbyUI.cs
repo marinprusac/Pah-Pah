@@ -1,17 +1,20 @@
 using System;
 using System.Threading.Tasks;
+using Managers;
+using Netcode.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Netcode.UI
+namespace Menu.UI
 {
     public class JoinLobbyUI : MonoBehaviour
     {
         [SerializeField] private TMP_InputField lobbyCodeInput;
         [SerializeField] private Button joinPrivateLobbyButton;
         [SerializeField] private Button goBackButton;
-
+        [SerializeField] private TMP_InputField nameInput;
+        
         [SerializeField] private Button refreshButton;
         [SerializeField] private Transform publicLobbiesSection;
 
@@ -31,6 +34,7 @@ namespace Netcode.UI
                 goBackButton.onClick.AddListener(OnGoBack);
                 refreshButton.onClick.AddListener(OnRefresh);
                 _refreshTimeLeft = RefreshTime;
+                LobbyManager.JoinedLobby += OnJoinedLobby;
             }
             catch (Exception e)
             {
@@ -43,6 +47,7 @@ namespace Netcode.UI
             joinPrivateLobbyButton.onClick.RemoveAllListeners();
             goBackButton.onClick.RemoveAllListeners();
             refreshButton.onClick.RemoveAllListeners();
+            LobbyManager.JoinedLobby -= OnJoinedLobby;
         }
 
         private void Start()
@@ -71,20 +76,17 @@ namespace Netcode.UI
 
         private void OnJoinPrivateLobby()
         {
-            LobbyManager.Instance.JoinedLobby += OnJoinedLobby;
-            _ = LobbyManager.Instance.JoinLobbyWithCode(lobbyCodeInput.text);
+            _ = LobbyManager.JoinLobbyWithCode(lobbyCodeInput.text, nameInput.text);
         }
 
 
         private void OnJoinPublicLobby(string lobbyId)
         {
-            LobbyManager.Instance.JoinedLobby += OnJoinedLobby;
-            _ = LobbyManager.Instance.JoinLobbyWithId(lobbyId);
+            _ = LobbyManager.JoinLobbyWithId(lobbyId, nameInput.text);
         }
         
         private void OnJoinedLobby()
         {
-            LobbyManager.Instance.JoinedLobby -= OnJoinedLobby;
             lobbyUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }
@@ -102,7 +104,7 @@ namespace Netcode.UI
 
         private async Task RefreshPublicLobbies()
         {
-            var updatedLobbies = await LobbyManager.Instance.GetUpdatedLobbies();
+            var updatedLobbies = await LobbyManager.GetUpdatedLobbies();
             
             for (var i = 0; i < publicLobbiesSection.childCount; i++)
             {

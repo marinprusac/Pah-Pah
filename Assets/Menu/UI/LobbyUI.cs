@@ -1,8 +1,9 @@
+using Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Netcode.UI
+namespace Menu.UI
 {
     public class LobbyUI : MonoBehaviour
     {
@@ -19,26 +20,32 @@ namespace Netcode.UI
 
         private void OnEnable()
         {
-            leaveLobbyButton.onClick.AddListener(OnLeaveLobby);
-            startGameButton.onClick.AddListener(OnStartGame);
+            leaveLobbyButton.onClick.AddListener(OnLeaveLobbyPressed);
+            startGameButton.onClick.AddListener(OnStartGamePressed);
             startGameButton.interactable = LobbyManager.Instance.AmHost;
-            var code = LobbyManager.Instance.CodeOrId;
+            var code = LobbyManager.Instance.IsLobbyPrivate
+                ? LobbyManager.Instance.LobbyCode
+                : LobbyManager.Instance.LobbyId;
             lobbyCodeLabel.text = code;
             firstPlayerLabel.text = LobbyManager.Instance.HostPlayerName;
             secondPlayerLabel.text = LobbyManager.Instance.GuestPlayerName ?? "";
-            LobbyManager.Instance.PlayerJoined += GuestJoined;
-            LobbyManager.Instance.PlayerLeft += GuestLeft;
-            LobbyManager.Instance.RemovedFromLobby += Removed;
-            LobbyManager.Instance.GameStarted += Started;
+            LobbyManager.GuestJoined += GuestJoined;
+            LobbyManager.GuestLeft += GuestLeft;
+            LobbyManager.LeftLobby += Removed;
+            GameManager.GameStarted += OnGameStarted;
+            
+            RelayManager.Initialize();
+            GameManager.Initialize();
         }
 
         private void OnDisable()
         {
             leaveLobbyButton.onClick.RemoveAllListeners();
             leaveLobbyButton.onClick.RemoveAllListeners();
-            LobbyManager.Instance.PlayerJoined -= GuestJoined;
-            LobbyManager.Instance.PlayerLeft -= GuestLeft;
-            LobbyManager.Instance.RemovedFromLobby -= Removed;
+            LobbyManager.GuestJoined -= GuestJoined;
+            LobbyManager.GuestLeft -= GuestLeft;
+            LobbyManager.LeftLobby -= Removed;
+            GameManager.GameStarted -= OnGameStarted;
         }
 
         private void GuestJoined(string playerName)
@@ -57,17 +64,17 @@ namespace Netcode.UI
             gameObject.SetActive(false);
         }
 
-        private void OnLeaveLobby()
+        private void OnLeaveLobbyPressed()
         {
             LobbyManager.Instance.LeaveLobby();
         }
 
-        private void OnStartGame()
+        private void OnStartGamePressed()
         {
-            LobbyManager.Instance.StartGame();
+            GameManager.StartGame(true);
         }
 
-        private void Started()
+        private void OnGameStarted()
         {
             gameObject.SetActive(false);
         }

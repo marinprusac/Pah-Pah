@@ -1,14 +1,12 @@
+using Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Netcode.UI
+namespace Menu.UI
 {
     public class SignInUI : MonoBehaviour
     {
-
-        [SerializeField]
-        private TMP_InputField nameInput;
         
         [SerializeField]
         private Button signInButton;
@@ -17,24 +15,23 @@ namespace Netcode.UI
         
         private void OnEnable()
         {
-            signInButton.onClick.AddListener(OnSignIn);
+            signInButton.onClick.AddListener(OnSignInPressed);
+            AuthenticationManager.SignedIn += OnSignedIn;
         }
 
         private void OnDisable()
         {
             signInButton.onClick.RemoveAllListeners();
+            AuthenticationManager.SignedIn -= OnSignedIn;
         }
 
-        private void Awake()
+        private void OnSignInPressed()
         {
-            LobbyManager.Initialize();
-            RelayManager.Initialize();
+            AuthenticationManager.Authenticate();
         }
 
-        private void OnSignIn()
+        private void OnSignedIn()
         {
-            if (string.IsNullOrWhiteSpace(nameInput.text)) return;
-            LobbyManager.Instance.Authenticate(nameInput.text);
             mainMenuUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }
