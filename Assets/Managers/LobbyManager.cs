@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Timers;
+using Arena;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
@@ -46,19 +47,23 @@ namespace Managers
             {
                 GuestPlayer = joinData[0].Player;
                 GuestJoined?.Invoke(GuestPlayerName);
+                _ = SetLobbyLockState(true);
             };
             callbacks.PlayerLeft += leftData =>
             {
                 GuestPlayer = null;
                 GuestLeft?.Invoke();
+                _ = SetLobbyLockState(false);
             };
             callbacks.KickedFromLobby += () =>
             {
                 LeftLobby?.Invoke();
+                Instance = null;
             };
             callbacks.LobbyDeleted += () =>
             {
                 LeftLobby?.Invoke();
+                Instance = null;
             };
             callbacks.DataAdded += values =>
             {
@@ -77,14 +82,29 @@ namespace Managers
                 }
             };
 
+            callbacks.PlayerDataAdded += values =>
+            {
+                foreach (var (playerId, changedOrRemovedLobbyValue) in values)
+                {
+
+                    foreach (var (variable, val) in changedOrRemovedLobbyValue)
+                    {
+                        var value = val.Value.Value;
+                        _playerChanged?.Invoke(playerId, variable, value);
+                    }
+                    
+                }
+
+            };
+
             LobbyService.Instance.SubscribeToLobbyEventsAsync(LobbyId, callbacks);
         }
 
         public bool IsLobbyPrivate { get; private set; }
         public string LobbyCode { get; private set; }
-        public string LobbyId { get; private set; }
-        public bool AmHost { get; private set; }
-        private Player HostPlayer { get; set; }
+        public string LobbyId { get; }
+        public bool AmHost { get; }
+        private Player HostPlayer { get; }
         private Player GuestPlayer { get; set; }
         
         private readonly Timer _heartbeatTimer;
@@ -97,25 +117,22 @@ namespace Managers
         public static Action<string> GuestJoined;
         public static Action GuestLeft;
         private Action<string, string> _dataChanged;
+        private Action<int, string, string> _playerChanged;
         
         public static async Task CreateLobby(bool isPublic, string playerName)
         {
             try
             {
                 var player = BuildPlayer(playerName);
-
                 var lobbyOptions = new CreateLobbyOptions
                 {
                     IsPrivate = !isPublic,
                     Player = player,
                 };
-                
                  var lobby = await LobbyService.Instance.CreateLobbyAsync(GUID.Generate().ToString(), 2, lobbyOptions);
                  
                 Instance = new LobbyManager(lobby, true);
                 JoinedLobby?.Invoke();
-
-                
             }
             catch (Exception e)
             {
@@ -134,7 +151,6 @@ namespace Managers
                 var lobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, joinOptions);
                 Instance = new LobbyManager(lobby, false);
                 JoinedLobby?.Invoke();
-
             }
             catch (LobbyServiceException e)
             {
@@ -196,12 +212,6 @@ namespace Managers
                 Debug.LogError("Error when leaving lobby: " + e.Message);
             }
         }
-
-        private void OnLeftLobby()
-        {
-            LeftLobby?.Invoke();
-            Instance = null;
-        }
         
         public static async Task<List<Lobby>> GetUpdatedLobbies()
         {
@@ -218,7 +228,26 @@ namespace Managers
             return lobbies;
         }
 
-        public void SubscribeToDataChanged(string variable, Action<string> callback)
+
+        public async Task ChangeLobbyData(string variable, string value)
+        {
+            try
+            {
+                await LobbyService.Instance.UpdateLobbyAsync(LobbyId, new UpdateLobbyOptions
+                {
+                    Data = new Dictionary<string, DataObject>
+                    {
+                        { variable, new DataObject(DataObject.VisibilityOptions.Member, value)}
+                    }
+                });
+            }
+            catch (Exception _)
+            {
+                throw; // TODO handle exception
+            }
+        }
+
+        public void SubscribeToLobbyDataChanged(string variable, Action<string> callback)
         {
             _dataChanged += (v, val) =>
             {
@@ -226,15 +255,40 @@ namespace Managers
             };
         }
 
-        public void ChangeData(string variable, string value)
+        public async Task ChangePlayerData(string playerId, string variable, string value)
         {
-            LobbyService.Instance.UpdateLobbyAsync(LobbyId, new UpdateLobbyOptions
+            await LobbyService.Instance.UpdatePlayerAsync(LobbyId, playerId, new UpdatePlayerOptions
             {
-                Data = new Dictionary<string, DataObject>
+                Data = new Dictionary<string, PlayerDataObject>
                 {
-                    { variable, new DataObject(DataObject.VisibilityOptions.Member, value)}
+                    {variable, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, value)}
                 }
             });
+        }
+        
+        public void SubscribeToPlayerDataChanged(string variable, Action<int, string> callback)
+        {
+            _playerChanged += (id, v, val) =>
+            {
+                if (v == variable) callback(id, val);
+            };
+        }
+        
+        
+
+        private async Task SetLobbyLockState(bool locked)
+        {
+            try
+            {
+                await LobbyService.Instance.UpdateLobbyAsync(LobbyId, new UpdateLobbyOptions
+                {
+                    IsLocked = locked
+                });
+            }
+            catch (Exception _)
+            {
+                throw; // TODO handle exception
+            }
         }
     }
 }

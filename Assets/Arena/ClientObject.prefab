@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6771062488877886073}
   - component: {fileID: 8625903130809914267}
   m_Layer: 0
-  m_Name: Player
+  m_Name: ClientObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -71,3 +71,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  playerPrefab: {fileID: 3078411325239297403, guid: d283c19dbcfa995149a087071b25e2eb, type: 3}

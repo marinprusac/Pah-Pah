@@ -34,7 +34,6 @@ namespace Menu.UI
             LobbyManager.LeftLobby += Removed;
             GameManager.GameStarted += OnGameStarted;
             
-            RelayManager.Initialize();
             GameManager.Initialize();
         }
 
@@ -71,7 +70,7 @@ namespace Menu.UI
 
         private void OnStartGamePressed()
         {
-            GameManager.StartGame(true);
+            GameManager.StartGame();
         }
 
         private void OnGameStarted()
