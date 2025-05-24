@@ -68,7 +68,7 @@ namespace Arena
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.Q))
             {
                 bool visible = Check();
                 Debug.Log("Object visible: " + visible);
