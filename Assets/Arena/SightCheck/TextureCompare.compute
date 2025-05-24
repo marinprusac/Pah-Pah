@@ -1,0 +1,16 @@
+#pragma kernel cs_main
+
+Texture2D tex_a;
+Texture2D tex_b;
+RWStructuredBuffer<uint> result; // 1-element buffer
+
+[numthreads(8,8,1)]
+void cs_main(uint3 id : SV_DispatchThreadID)
+{
+    float3 a = tex_a[id.xy].rgb;
+    float3 b = tex_b[id.xy].rgb;
+    float diff = distance(a, b);
+    
+    if (diff > 0.01)
+        InterlockedAdd(result[0], 1);
+}

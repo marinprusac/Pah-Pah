@@ -32,9 +32,9 @@ namespace Menu.UI
             LobbyManager.GuestJoined += GuestJoined;
             LobbyManager.GuestLeft += GuestLeft;
             LobbyManager.LeftLobby += Removed;
-            GameManager.GameStarted += OnGameStarted;
+            RelayManager.AllReady += OnGameStarted;
             
-            GameManager.Initialize();
+            RelayManager.Initialize();
         }
 
         private void OnDisable()
@@ -44,7 +44,7 @@ namespace Menu.UI
             LobbyManager.GuestJoined -= GuestJoined;
             LobbyManager.GuestLeft -= GuestLeft;
             LobbyManager.LeftLobby -= Removed;
-            GameManager.GameStarted -= OnGameStarted;
+            RelayManager.AllReady -= OnGameStarted;
         }
 
         private void GuestJoined(string playerName)
@@ -70,7 +70,7 @@ namespace Menu.UI
 
         private void OnStartGamePressed()
         {
-            GameManager.StartGame();
+            RelayManager.StartRelay();
         }
 
         private void OnGameStarted()
