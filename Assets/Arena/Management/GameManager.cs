@@ -35,6 +35,7 @@ namespace Arena.Management
             var rand = new Random();
             _playerOneSpawnIndex = rand.Next(0, _spawns.Count-1);
             _playerTwoSpawnIndex = (_playerOneSpawnIndex + rand.Next(1, _spawns.Count - 1)) % _spawns.Count;
+            print("Spawn indices: " + _playerOneSpawnIndex + ", " + _playerTwoSpawnIndex);
             
             foreach (var connectedClientsValue in NetworkManager.ConnectedClients.Values)
             {
@@ -55,11 +56,24 @@ namespace Arena.Management
             Instance = null;
         }
 
+        private bool _spawnedOne;
+
         [Rpc(SendTo.Server)]
         private void SpawnPlayerRpc(ulong clientId)
         {
-
-            var spawn = _spawns[_arenaPlayerObjects.Count == 0 ? _playerOneSpawnIndex : _playerTwoSpawnIndex];
+            
+            print("Already spawned: " + _spawnedOne);
+            Vector3 spawn;
+            if (!_spawnedOne)
+            {
+                _spawnedOne = true;
+                spawn = _spawns[_playerOneSpawnIndex];
+            }
+            else
+            {
+                spawn = _spawns[_playerTwoSpawnIndex];
+            }
+            print("Spawning on: " + spawn);
             
             var obj = NetworkManager.SpawnManager.InstantiateAndSpawn(playerPrefab, clientId, true, position: spawn);
             _arenaPlayerObjects[clientId] = obj.GetComponent<ArenaPlayer>();
