@@ -403,6 +403,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6803513161429627705}
   - component: {fileID: 5549082435434424020}
+  - component: {fileID: 9122177151217042765}
   m_Layer: 3
   m_Name: Vision
   m_TagString: Untagged
@@ -443,3 +444,21 @@ MonoBehaviour:
   cameraA: {fileID: 7291174070789852562}
   cameraB: {fileID: 9007488487240319679}
   compareShader: {fileID: 7200000, guid: 563690a1becef0a43a9cd0f2a2ededb8, type: 3}
+--- !u!1818360609 &9122177151217042765
+RotationConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3927156659227181334}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Weight: 1
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_RotationOffset: {x: 0, y: 0, z: 0}
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_Active: 0
+  m_IsLocked: 1
+  m_Sources: []

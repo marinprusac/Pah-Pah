@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Arena.Player;
+using Managers;
 using Unity.Netcode;
 using UnityEngine;
 using Random = System.Random;
@@ -13,15 +15,26 @@ namespace Arena.Management
         public NetworkObject playerPrefab;
         public Transform spawnsParent;
         public NetworkObject musicPlayer;
+
+
+        private ArenaPlayer _hostPlayer;
+        private ArenaPlayer _guestPlayer;
+
+        private ulong HostId => _hostPlayer.OwnerClientId;
+        private ulong GuestId => _guestPlayer.OwnerClientId;
+        
+
+        private readonly NetworkVariable<int> _hostPoints = new();
+        private readonly NetworkVariable<int> _guestPoints = new();
+
+        private string HostName => LobbyManager.Instance.HostPlayerName;
+        private string GuestName => LobbyManager.Instance.GuestPlayerName;
         
         
-        
-        private readonly Dictionary<ulong, ClientObject> _clientObjects = new();
-        private readonly Dictionary<ulong, ArenaPlayer> _arenaPlayerObjects = new();
         private readonly List<Vector3> _spawns = new();
 
-        private int _playerOneSpawnIndex;
-        private int _playerTwoSpawnIndex;
+        private int _hostSpawnIndex;
+        private int _guestSpawnIndex;
         
         public override void OnNetworkSpawn()
         {
@@ -33,16 +46,10 @@ namespace Arena.Management
             }
 
             var rand = new Random();
-            _playerOneSpawnIndex = rand.Next(0, _spawns.Count-1);
-            _playerTwoSpawnIndex = (_playerOneSpawnIndex + rand.Next(1, _spawns.Count - 1)) % _spawns.Count;
-            print("Spawn indices: " + _playerOneSpawnIndex + ", " + _playerTwoSpawnIndex);
+            _hostSpawnIndex = rand.Next(0, _spawns.Count-1);
+            _guestSpawnIndex = (_hostSpawnIndex + rand.Next(1, _spawns.Count - 1)) % _spawns.Count;
             
-            foreach (var connectedClientsValue in NetworkManager.ConnectedClients.Values)
-            {
-                _clientObjects[connectedClientsValue.ClientId] = connectedClientsValue.PlayerObject.GetComponent<ClientObject>();
-            }
-            
-            SpawnPlayerRpc(NetworkManager.LocalClientId);
+            SpawnPlayerRpc();
 
             if (IsServer)
             {
@@ -55,28 +62,37 @@ namespace Arena.Management
         {
             Instance = null;
         }
-
-        private bool _spawnedOne;
-
+        
         [Rpc(SendTo.Server)]
-        private void SpawnPlayerRpc(ulong clientId)
+        private void SpawnPlayerRpc(RpcParams rpcParams = default)
         {
+
+            var clientId = rpcParams.Receive.SenderClientId;
+            var isHost = NetworkManager.LocalClientId == clientId;
             
-            print("Already spawned: " + _spawnedOne);
-            Vector3 spawn;
-            if (!_spawnedOne)
+            var obj = NetworkManager.SpawnManager.InstantiateAndSpawn(playerPrefab, destroyWithScene: true, ownerClientId: clientId);
+            var arenaPlayer = obj.GetComponent<ArenaPlayer>();
+            
+            
+            if (isHost)
             {
-                _spawnedOne = true;
-                spawn = _spawns[_playerOneSpawnIndex];
+                _hostPlayer = arenaPlayer;
+                _hostPlayer.AssignSpawnPositionRpc(_spawns[_hostSpawnIndex]);
             }
             else
             {
-                spawn = _spawns[_playerTwoSpawnIndex];
+                _guestPlayer = arenaPlayer;
+                _guestPlayer.AssignSpawnPositionRpc(_spawns[_guestSpawnIndex]);
             }
-            print("Spawning on: " + spawn);
-            
-            var obj = NetworkManager.SpawnManager.InstantiateAndSpawn(playerPrefab, clientId, true, position: spawn);
-            _arenaPlayerObjects[clientId] = obj.GetComponent<ArenaPlayer>();
+        }
+
+
+        [Rpc(SendTo.Server)]
+        public void AssignPointsRpc(int points, ulong clientId)
+        {
+            if (clientId == HostId) _hostPoints.Value += points;
+            else if (clientId == GuestId) _guestPoints.Value += points;
+            print("Host points: " + _hostPoints.Value + "; Guest points: " + _guestPoints.Value);
         }
     }
 }

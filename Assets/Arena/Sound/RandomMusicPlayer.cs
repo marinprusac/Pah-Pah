@@ -31,7 +31,6 @@ public class RandomMusicPlayer : NetworkBehaviour
     
     private void PlayClip(int clipIndex)
     {
-        print(clipIndex);
         if (clipIndex >= ClipCount || clipIndex < 0) throw new IndexOutOfRangeException("Index " + clipIndex + " is out of bound for the list of music clips with the size of " + ClipCount);
         AudioSource.clip = musicClips[clipIndex];
         AudioSource.Play();

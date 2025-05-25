@@ -1,6 +1,5 @@
-using System;
-using System.Numerics;
-using Unity.Mathematics;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -16,14 +15,15 @@ namespace Arena.Player
     { 
         [SerializeField]
         private Animator animator;
-        
+
+
         
 
-        [SerializeField]
-        private Transform Aim;
+        [FormerlySerializedAs("Aim")] [SerializeField]
+        private Transform aim;
         
-        [SerializeField]
-        private Transform Body;
+        [FormerlySerializedAs("Body")] [SerializeField]
+        private Transform body;
         
         public float speed = 5;
         public float turnAroundSpeed = 1;
@@ -42,7 +42,17 @@ namespace Arena.Player
         private bool CheckIfGrounded()
         {
             LayerMask mask = LayerMask.GetMask("Default");
-            return Physics.Raycast(transform.position, Vector3.down, _characterController.height/2 + 0.1f, layerMask:mask);
+
+            var raycastOriginOffsets = new List<Vector3>
+            {
+                Vector3.zero,
+                Vector3.forward * _characterController.radius,
+                Vector3.back * _characterController.radius,
+                Vector3.left * _characterController.radius,
+                Vector3.right * _characterController.radius
+            };
+
+            return raycastOriginOffsets.Any(offset => Physics.Raycast(transform.position + offset, Vector3.down, _characterController.height / 2 + 0.1f, layerMask: mask));
         }
 
         private void Awake()
@@ -75,24 +85,32 @@ namespace Arena.Player
             _inputSystem.Player.Jump.canceled -= StopJumping;
         }
 
+
+        private float _grace = 1f;
+        
         private void Update()
         {
-            if (HasAuthority)
+
+            if (_grace > 0)
+            {
+                _grace -= Time.deltaTime;
+                return;
+            }
+            if (IsOwner && IsSpawned)
             {
                 Movement();
                 Look();
             }
         }
 
-
-        private bool _jumped = false;
+        private bool _jumped;
+        private Vector2 _lookingDirection = Vector2.zero;
+        private Vector3 _movementDirection;
+        private float MovementYaw => Vector3.SignedAngle(Vector3.forward, _movementDirection, Vector3.up);
 
         private void Movement()
         {
-
-            
             _verticalVelocity -= gravity * Time.deltaTime;
-            
             if (Grounded)
             {
                 if (_jumping)
@@ -103,13 +121,13 @@ namespace Arena.Player
                 else
                 {
                     if(_jumped)
-                        animator.SetTrigger("Landed");
+                        PlayAnimationRpc("Landed");
+                        //animator.SetTrigger("Landed");
                     _jumped = false;
 
                     _verticalVelocity = 0;
                 }
             }
-            
             _characterController.Move( _verticalVelocity * Time.deltaTime * Vector3.up);
             
             var movementAxes = _inputSystem.Player.Movement.ReadValue<Vector2>();
@@ -122,8 +140,12 @@ namespace Arena.Player
                 _movementDirection = movementDir;
             }
             
-            animator.SetFloat("Speed", movementAxes.magnitude);
-            animator.SetFloat("Vertical", _verticalVelocity);
+            
+            PlayAnimationRpc("Speed", movementAxes.magnitude);
+            PlayAnimationRpc("Vertical", _verticalVelocity);
+            
+            // animator.SetFloat("Speed", movementAxes.magnitude);
+            // animator.SetFloat("Vertical", _verticalVelocity);
 
             
             var movement = Time.deltaTime * speed * movementDir;
@@ -131,18 +153,13 @@ namespace Arena.Player
 
         }
         
-        private Vector2 _lookingDirection = Vector2.zero;
-        private Vector3 _movementDirection;
-        private float MovementYaw => Vector3.SignedAngle(Vector3.forward, _movementDirection, Vector3.up);
-        
-        
         private void Look()
         {
             var lookMove = _inputSystem.Player.Look.ReadValue<Vector2>() * turnAroundSpeed;
             _lookingDirection = new Vector2(Mathf.Clamp(_lookingDirection.x-lookMove.y, -80, 80), _lookingDirection.y + lookMove.x);
-            Aim.localPosition = Quaternion.Euler(_lookingDirection.x-30, _lookingDirection.y, 0) * (5 * Vector3.forward);
-            Aim.rotation = Quaternion.LookRotation(Aim.localPosition, Vector3.up);
-            Body.rotation = Quaternion.Slerp(Body.rotation, Quaternion.Euler(0, MovementYaw, 0), 1-Mathf.Pow(0.01f, Time.deltaTime));
+            aim.localPosition = Quaternion.Euler(_lookingDirection.x-30, _lookingDirection.y, 0) * (5 * Vector3.forward);
+            aim.rotation = Quaternion.LookRotation(aim.localPosition, Vector3.up);
+            body.rotation = Quaternion.Slerp(body.rotation, Quaternion.Euler(0, MovementYaw, 0), 1-Mathf.Pow(0.01f, Time.deltaTime));
 
         }
 
@@ -154,6 +171,14 @@ namespace Arena.Player
         private void StopJumping(InputAction.CallbackContext _)
         {
             _jumping = false;
+        }
+
+
+        [Rpc(SendTo.Server)]
+        private void PlayAnimationRpc(string triggerName, float value=float.NaN)
+        {
+            if(float.IsNaN(value)) animator.SetTrigger(triggerName);
+            else animator.SetFloat(triggerName, value);
         }
     }
 }
