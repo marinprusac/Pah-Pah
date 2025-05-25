@@ -1,17 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Managers;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
-using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Managers
+namespace Menu.Managers
 {
     public static class RelayManager
     {
@@ -20,7 +19,7 @@ namespace Managers
         public static void Initialize()
         {
 
-            if (_initialized) throw new Exception("GameManager already initialized.");
+            if (_initialized) throw new Exception("RelayManager already initialized.");
             
             LobbyManager.Instance.SubscribeToLobbyDataChanged("relayCode", async (code) =>
             {
@@ -44,6 +43,11 @@ namespace Managers
             _initialized = true;
         }
 
+        public static void Uninitialize()
+        {
+            _initialized = false;
+        }
+        
         public static Action AllReady;
         
         public static async void StartRelay()

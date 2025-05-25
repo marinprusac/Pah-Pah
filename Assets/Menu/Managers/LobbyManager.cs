@@ -2,15 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Timers;
-using Arena;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 
-namespace Managers
+namespace Menu.Managers
 {
     
     public class LobbyManager
@@ -22,6 +20,11 @@ namespace Managers
         {
             get => _instance ?? throw new Exception("LobbyManager not initialized. Join or create a lobby!");
             private set => _instance = value;
+        }
+
+        public static void Uninitialize()
+        {
+            Instance = null;
         }
         
         private LobbyManager(Lobby lobby, bool amHost)

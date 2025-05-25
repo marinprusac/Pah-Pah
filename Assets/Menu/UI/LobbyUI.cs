@@ -1,4 +1,4 @@
-using Managers;
+using Menu.Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,6 +45,9 @@ namespace Menu.UI
             LobbyManager.GuestLeft -= GuestLeft;
             LobbyManager.LeftLobby -= Removed;
             RelayManager.AllReady -= OnGameStarted;
+            
+            RelayManager.Uninitialize();
+            LobbyManager.Uninitialize();
         }
 
         private void GuestJoined(string playerName)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Arena.Player;
 using Managers;
+using Menu.Managers;
 using Unity.Netcode;
 using UnityEngine;
 using Random = System.Random;
