@@ -16,7 +16,7 @@ namespace Arena
         private ComputeBuffer _resultBuffer;
         private uint[] _result = new uint[1];
 
-        private void Start()
+        private void Awake()
         {
             _rtA = CreateRT();
             _rtB = CreateRT();
@@ -64,15 +64,6 @@ namespace Arena
             _rtA.Release();
             _rtB.Release();
             _resultBuffer?.Dispose();
-        }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Q))
-            {
-                bool visible = Check();
-                Debug.Log("Object visible: " + visible);
-            }
         }
     }
 }

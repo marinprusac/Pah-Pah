@@ -1,7 +1,6 @@
-using System;
+using Arena.Management;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Animations;
 
 namespace Arena.Player
 {
@@ -10,7 +9,7 @@ namespace Arena.Player
         [SerializeField]
         private GameObject visionPrefab;
 
-        private GameObject _visionInstance;
+        private SightCheck _visionInstance;
 
         [SerializeField] private Transform aim;
         
@@ -32,17 +31,28 @@ namespace Arena.Player
         {
             if (IsOwner)
             {
-                _visionInstance = Instantiate(visionPrefab, transform);
+                _visionInstance = Instantiate(visionPrefab, transform).GetComponent<SightCheck>();
                 SetLayerRecursively(gameObject, 3);
             }
             
         }
+
+        public float cooldownDuration = 5;
+        private float cooldown;
 
         private void Update()
         {
             if (IsOwner)
             {
                 _visionInstance.transform.rotation = aim.rotation;
+                cooldown -= Mathf.Max(0, Time.deltaTime);
+                if (Input.GetMouseButtonDown(0) && cooldown <= 0)
+                {
+                    cooldown = cooldownDuration;
+                    var result = _visionInstance.Check();
+                    if(result)
+                        GameManager.Instance.PahPahRpc(NetworkManager.LocalClientId);
+                }
             }
         }
 
@@ -51,6 +61,5 @@ namespace Arena.Player
         {
             transform.position = spawnPosition;
         }
-        
     }
 }

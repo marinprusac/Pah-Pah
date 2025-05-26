@@ -72,5 +72,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   playerPrefab: {fileID: 3078411325239297403, guid: d283c19dbcfa995149a087071b25e2eb, type: 3}
-  spawnsParent: {fileID: 4200966782867776266, guid: f28857f3dd04cce86931c10acb6086b0, type: 3}
+  coinPrefab: {fileID: 162017852139263716, guid: a859672054e443f6687434a1ef84ec69, type: 3}
   musicPlayer: {fileID: 3638856592257998693, guid: 4673366a91ca42cdd9c1c619d441bb83, type: 3}

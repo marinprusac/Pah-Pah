@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using Arena.Player;
 using Managers;
 using Menu.Managers;
+using NUnit.Framework;
 using Unity.Netcode;
+using UnityEditor.Rendering.LookDev;
 using UnityEngine;
 using Random = System.Random;
 
@@ -14,7 +16,7 @@ namespace Arena.Management
         public static GameManager Instance;
         
         public NetworkObject playerPrefab;
-        public Transform spawnsParent;
+        public NetworkObject coinPrefab;
         public NetworkObject musicPlayer;
 
 
@@ -23,45 +25,52 @@ namespace Arena.Management
 
         private ulong HostId => _hostPlayer.OwnerClientId;
         private ulong GuestId => _guestPlayer.OwnerClientId;
+
+        private Vector3 _hostSpawnPoint;
+        private Vector3 _guestSpawnPoint;
         
 
-        private readonly NetworkVariable<int> _hostPoints = new();
-        private readonly NetworkVariable<int> _guestPoints = new();
+        private int _hostPoints;
+        private int _guestPoints;
 
         private string HostName => LobbyManager.Instance.HostPlayerName;
         private string GuestName => LobbyManager.Instance.GuestPlayerName;
         
-        
-        private readonly List<Vector3> _spawns = new();
-
-        private int _hostSpawnIndex;
-        private int _guestSpawnIndex;
+        public void OnDisable()
+        {
+            Instance = null;
+        }
         
         public override void OnNetworkSpawn()
         {
             Instance = this;
-            
-            for (int i = 0; i < spawnsParent.childCount; i++)
-            {
-                _spawns.Add(spawnsParent.GetChild(i).position);
-            }
-
-            var rand = new Random();
-            _hostSpawnIndex = rand.Next(0, _spawns.Count-1);
-            _guestSpawnIndex = (_hostSpawnIndex + rand.Next(1, _spawns.Count - 1)) % _spawns.Count;
-            
-            SpawnPlayerRpc();
-
-            if (IsServer)
-            {
-                NetworkManager.SpawnManager.InstantiateAndSpawn(musicPlayer);
-            }
-            
+            StartRound();
         }
 
-        public void OnDisable()
+        private void StartRound()
         {
-            Instance = null;
+            if (IsServer)
+            {
+                SpawnPointManager.Instance.GetPlayerSpawnPoints(out _hostSpawnPoint, out _guestSpawnPoint);
+                NetworkManager.SpawnManager.InstantiateAndSpawn(musicPlayer);
+            }
+            SpawnCoins();
+            SpawnPlayerRpc();
+        }
+
+
+        private void EndRound()
+        {
+            RenderSettings.fogColor = Color.white;
+        }
+
+        private void SpawnCoins()
+        {
+            var coinSpawnPoints = SpawnPointManager.Instance.GetCoinSpawnPoints();
+            foreach (var spawnPoint in coinSpawnPoints)
+            {
+                NetworkManager.SpawnManager.InstantiateAndSpawn(playerPrefab, position: spawnPoint, destroyWithScene: true);
+            }
         }
         
         [Rpc(SendTo.Server)]
@@ -78,12 +87,12 @@ namespace Arena.Management
             if (isHost)
             {
                 _hostPlayer = arenaPlayer;
-                _hostPlayer.AssignSpawnPositionRpc(_spawns[_hostSpawnIndex]);
+                _hostPlayer.AssignSpawnPositionRpc(_hostSpawnPoint);
             }
             else
             {
                 _guestPlayer = arenaPlayer;
-                _guestPlayer.AssignSpawnPositionRpc(_spawns[_guestSpawnIndex]);
+                _guestPlayer.AssignSpawnPositionRpc(_guestSpawnPoint);
             }
         }
 
@@ -91,9 +100,24 @@ namespace Arena.Management
         [Rpc(SendTo.Server)]
         public void AssignPointsRpc(int points, ulong clientId)
         {
-            if (clientId == HostId) _hostPoints.Value += points;
-            else if (clientId == GuestId) _guestPoints.Value += points;
-            print("Host points: " + _hostPoints.Value + "; Guest points: " + _guestPoints.Value);
+            if (clientId == HostId) _hostPoints += points;
+            else if (clientId == GuestId) _guestPoints += points;
+            print("Host points: " + _hostPoints + "; Guest points: " + _guestPoints);
+        }
+
+        [Rpc(SendTo.Server)]
+        public void PahPahRpc(ulong clientId)
+        {
+            AssignPointsRpc(5, clientId);
+            RoundEndRpc(clientId, _hostPoints, _guestPoints);
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void RoundEndRpc(ulong clientWinner, int hostPoints, int guestPoints)
+        {
+            _hostPoints = hostPoints;
+            _guestPoints = guestPoints;
+            EndRound();
         }
     }
 }

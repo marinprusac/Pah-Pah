@@ -22,7 +22,7 @@ namespace Menu.UI
         {
             leaveLobbyButton.onClick.AddListener(OnLeaveLobbyPressed);
             startGameButton.onClick.AddListener(OnStartGamePressed);
-            startGameButton.interactable = LobbyManager.Instance.AmHost;
+            startGameButton.interactable = false;
             var code = LobbyManager.Instance.IsLobbyPrivate
                 ? LobbyManager.Instance.LobbyCode
                 : LobbyManager.Instance.LobbyId;
@@ -53,11 +53,14 @@ namespace Menu.UI
         private void GuestJoined(string playerName)
         {
             secondPlayerLabel.text = playerName;
+            if (LobbyManager.Instance.AmHost) startGameButton.interactable = true;
+
         }
 
         private void GuestLeft()
         {
             secondPlayerLabel.text = "";
+            if (LobbyManager.Instance.AmHost) startGameButton.interactable = false;
         }
 
         private void Removed()
