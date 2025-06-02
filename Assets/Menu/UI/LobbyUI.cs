@@ -46,8 +46,6 @@ namespace Menu.UI
             LobbyManager.LeftLobby -= Removed;
             RelayManager.AllReady -= OnGameStarted;
             
-            RelayManager.Uninitialize();
-            LobbyManager.Uninitialize();
         }
 
         private void GuestJoined(string playerName)
@@ -67,6 +65,8 @@ namespace Menu.UI
         {
             mainMenuUI.gameObject.SetActive(true);
             gameObject.SetActive(false);
+            LobbyManager.Uninitialize();
+            RelayManager.Uninitialize();
         }
 
         private void OnLeaveLobbyPressed()

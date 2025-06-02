@@ -23,9 +23,8 @@ namespace Arena.Management
         private ArenaPlayer _hostPlayer;
         private ArenaPlayer _guestPlayer;
 
-        public bool AmHost => NetworkManager.LocalClientId == HostId;
         
-        private ArenaPlayer MyPlayer => AmHost ? _hostPlayer : _guestPlayer;
+        private ArenaPlayer MyPlayer => IsHost ? _hostPlayer : _guestPlayer;
 
         private ulong HostId => _hostPlayer.OwnerClientId;
         private ulong GuestId => _guestPlayer.OwnerClientId;
@@ -40,7 +39,7 @@ namespace Arena.Management
         private string HostName => LobbyManager.Instance.HostPlayerName;
         private string GuestName => LobbyManager.Instance.GuestPlayerName;
 
-        private List<NetworkObject> _spawnedCoins = new();
+        private readonly List<NetworkObject> _spawnedCoins = new();
 
         
         public void OnDisable()
@@ -80,7 +79,7 @@ namespace Arena.Management
         {
             RandomMusicPlayer.Instance.FadeOutVolume();
             yield return new WaitForSeconds(3);
-            UIManager.Instance.FadeOut(UIManager.Instance.ShowPoints);
+            UIManager.Instance.FadeOut(() => { });
             yield return new WaitForSeconds(4);
             if (IsServer)
             {
@@ -167,10 +166,10 @@ namespace Arena.Management
         {
             _hostPoints = hostPoints;
             _guestPoints = guestPoints;
-            var myPoints = AmHost ? hostPoints : guestPoints;
-            var opponentsPoints = AmHost ? guestPoints : hostPoints;
-            var myName = AmHost ? HostName : GuestName;
-            var opponentsName = AmHost ? GuestName : HostName;
+            var myPoints = IsHost ? hostPoints : guestPoints;
+            var opponentsPoints = IsHost ? guestPoints : hostPoints;
+            var myName = IsHost ? HostName : GuestName;
+            var opponentsName = IsHost ? GuestName : HostName;
             UIManager.Instance.SetPoints(myName, myPoints, opponentsName, opponentsPoints);
             EndRound(clientWinner == NetworkManager.LocalClientId);
         }

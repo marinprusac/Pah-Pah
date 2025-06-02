@@ -76,6 +76,7 @@ namespace Arena.UI
             RenderSettings.fogColor = Color.black;
             RenderSettings.skybox.color = Color.black;
             uiCamera.enabled = true;
+            ShowPoints();
             onFinished();
         }
         

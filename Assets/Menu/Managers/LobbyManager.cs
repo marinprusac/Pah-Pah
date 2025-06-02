@@ -25,6 +25,7 @@ namespace Menu.Managers
         public static void Uninitialize()
         {
             Instance = null;
+            Debug.Log("Lobby uninitialized");
         }
         
         private LobbyManager(Lobby lobby, bool amHost)
@@ -61,11 +62,13 @@ namespace Menu.Managers
             callbacks.KickedFromLobby += () =>
             {
                 LeftLobby?.Invoke();
+                Debug.Log("Kicked from the lobby.");
                 Instance = null;
             };
             callbacks.LobbyDeleted += () =>
             {
                 LeftLobby?.Invoke();
+                Debug.Log("Lobby has been deleted.");
                 Instance = null;
             };
             callbacks.DataAdded += values =>
