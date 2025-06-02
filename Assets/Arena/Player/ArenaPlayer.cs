@@ -8,12 +8,14 @@ namespace Arena.Player
     {
         [SerializeField]
         private GameObject visionPrefab;
-
-        private SightCheck _visionInstance;
-
         [SerializeField] private Transform aim;
         
         
+        
+        private SightCheck _visionInstance;
+        public PlayerControls PlayerControls { get; private set; }
+
+
         private void SetLayerRecursively(GameObject obj, int newLayer)
         {
             if (obj is null) return;
@@ -33,6 +35,7 @@ namespace Arena.Player
             {
                 _visionInstance = Instantiate(visionPrefab, transform).GetComponent<SightCheck>();
                 SetLayerRecursively(gameObject, 3);
+               PlayerControls = GetComponent<PlayerControls>();
             }
             
         }
@@ -42,7 +45,7 @@ namespace Arena.Player
 
         private void Update()
         {
-            if (IsOwner)
+            if (IsOwner && _visionInstance.TurnedOn)
             {
                 _visionInstance.transform.rotation = aim.rotation;
                 cooldown -= Mathf.Max(0, Time.deltaTime);
@@ -60,6 +63,20 @@ namespace Arena.Player
         public void AssignSpawnPositionRpc(Vector3 spawnPosition)
         {
             transform.position = spawnPosition;
+        }
+
+        [Rpc(SendTo.Owner)]
+        public void StartMovingRpc()
+        {
+            PlayerControls.TurnedOn = true;
+            _visionInstance.TurnedOn = true;
+        }
+        
+        [Rpc(SendTo.Owner)]
+        public void StopMovingRpc()
+        {
+            PlayerControls.TurnedOn = false;
+            _visionInstance.TurnedOn = false;
         }
     }
 }

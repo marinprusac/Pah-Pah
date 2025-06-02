@@ -11,7 +11,7 @@ using Vector3 = UnityEngine.Vector3;
 namespace Arena.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerMovement : NetworkBehaviour
+    public class PlayerControls : NetworkBehaviour
     { 
         [SerializeField]
         private Animator animator;
@@ -84,23 +84,12 @@ namespace Arena.Player
             _inputSystem.Player.Jump.started -= StartJumping;
             _inputSystem.Player.Jump.canceled -= StopJumping;
         }
-
-
-        private float _grace = 1f;
-        
+        public bool TurnedOn { get; set; }
         private void Update()
         {
-
-            if (_grace > 0)
-            {
-                _grace -= Time.deltaTime;
-                return;
-            }
-            if (IsOwner && IsSpawned)
-            {
-                Movement();
-                Look();
-            }
+            if (!IsOwner || !IsSpawned || !TurnedOn) return;
+            Movement();
+            Look();
         }
 
         private bool _jumped;
@@ -122,32 +111,22 @@ namespace Arena.Player
                 {
                     if(_jumped)
                         PlayAnimationRpc("Landed");
-                        //animator.SetTrigger("Landed");
                     _jumped = false;
 
                     _verticalVelocity = 0;
                 }
             }
             _characterController.Move( _verticalVelocity * Time.deltaTime * Vector3.up);
-            
             var movementAxes = _inputSystem.Player.Movement.ReadValue<Vector2>();
             var movementAxes3D = new Vector3(movementAxes.x, 0, movementAxes.y);
             var yawRotation = Quaternion.Euler(0, _lookingDirection.y, 0);
             var movementDir = yawRotation * movementAxes3D;
-
             if (movementDir.magnitude > 0.01f)
             {
                 _movementDirection = movementDir;
             }
-            
-            
             PlayAnimationRpc("Speed", movementAxes.magnitude);
             PlayAnimationRpc("Vertical", _verticalVelocity);
-            
-            // animator.SetFloat("Speed", movementAxes.magnitude);
-            // animator.SetFloat("Vertical", _verticalVelocity);
-
-            
             var movement = Time.deltaTime * speed * movementDir;
             _characterController.Move(movement);
 
@@ -172,7 +151,6 @@ namespace Arena.Player
         {
             _jumping = false;
         }
-
 
         [Rpc(SendTo.Server)]
         private void PlayAnimationRpc(string triggerName, float value=float.NaN)

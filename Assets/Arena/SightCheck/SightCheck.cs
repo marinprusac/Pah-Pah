@@ -16,6 +16,8 @@ namespace Arena
         private ComputeBuffer _resultBuffer;
         private uint[] _result = new uint[1];
 
+        public bool TurnedOn { get; set; } = false;
+
         private void Awake()
         {
             _rtA = CreateRT();
@@ -37,6 +39,7 @@ namespace Arena
 
         public bool Check()
         {
+            
             _result[0] = 0;
             _resultBuffer.SetData(_result);
 

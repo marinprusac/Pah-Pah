@@ -1,12 +1,12 @@
+using System.Collections;
 using System.Collections.Generic;
+using Arena.Coin;
 using Arena.Player;
-using Managers;
+using Arena.Sound;
+using Arena.UI;
 using Menu.Managers;
-using NUnit.Framework;
 using Unity.Netcode;
-using UnityEditor.Rendering.LookDev;
 using UnityEngine;
-using Random = System.Random;
 
 namespace Arena.Management
 {
@@ -23,6 +23,10 @@ namespace Arena.Management
         private ArenaPlayer _hostPlayer;
         private ArenaPlayer _guestPlayer;
 
+        public bool AmHost => NetworkManager.LocalClientId == HostId;
+        
+        private ArenaPlayer MyPlayer => AmHost ? _hostPlayer : _guestPlayer;
+
         private ulong HostId => _hostPlayer.OwnerClientId;
         private ulong GuestId => _guestPlayer.OwnerClientId;
 
@@ -35,6 +39,9 @@ namespace Arena.Management
 
         private string HostName => LobbyManager.Instance.HostPlayerName;
         private string GuestName => LobbyManager.Instance.GuestPlayerName;
+
+        private List<NetworkObject> _spawnedCoins = new();
+
         
         public void OnDisable()
         {
@@ -53,23 +60,55 @@ namespace Arena.Management
             {
                 SpawnPointManager.Instance.GetPlayerSpawnPoints(out _hostSpawnPoint, out _guestSpawnPoint);
                 NetworkManager.SpawnManager.InstantiateAndSpawn(musicPlayer);
+                SpawnCoins();
+                RandomMusicPlayer.Instance.SyncNextSong();
             }
-            SpawnCoins();
             SpawnPlayerRpc();
         }
 
 
-        private void EndRound()
+        private void EndRound(bool won)
         {
-            RenderSettings.fogColor = Color.white;
+            if (!won)
+            {
+                UIManager.Instance.LoserAnimation();
+            }
+            StartCoroutine(DelayedShowResultsCoroutine());
         }
+        
+        private IEnumerator DelayedShowResultsCoroutine()
+        {
+            RandomMusicPlayer.Instance.FadeOutVolume();
+            yield return new WaitForSeconds(3);
+            UIManager.Instance.FadeOut(UIManager.Instance.ShowPoints);
+            yield return new WaitForSeconds(4);
+            if (IsServer)
+            {
+                _hostPlayer.NetworkObject.Despawn();
+                _guestPlayer.NetworkObject.Despawn();
+                DespawnCoins();
+            }
+            UIManager.Instance.FadeIn(StartRound);
+        }
+        
+        
 
         private void SpawnCoins()
         {
             var coinSpawnPoints = SpawnPointManager.Instance.GetCoinSpawnPoints();
             foreach (var spawnPoint in coinSpawnPoints)
             {
-                NetworkManager.SpawnManager.InstantiateAndSpawn(playerPrefab, position: spawnPoint, destroyWithScene: true);
+                var instance = NetworkManager.SpawnManager.InstantiateAndSpawn(coinPrefab, position: spawnPoint, destroyWithScene: true);
+                _spawnedCoins.Add(instance);
+            }
+        }
+
+        private void DespawnCoins()
+        {
+            foreach (var coin in _spawnedCoins)
+            {
+                if(coin && coin.IsSpawned)
+                    coin.Despawn();
             }
         }
         
@@ -93,7 +132,16 @@ namespace Arena.Management
             {
                 _guestPlayer = arenaPlayer;
                 _guestPlayer.AssignSpawnPositionRpc(_guestSpawnPoint);
+                StartCoroutine(DelayMoveStart());
             }
+        }
+
+        private IEnumerator DelayMoveStart()
+        {
+            
+            yield return new WaitForSeconds(1);
+            _hostPlayer.StartMovingRpc();
+            _guestPlayer.StartMovingRpc();
         }
 
 
@@ -108,6 +156,8 @@ namespace Arena.Management
         [Rpc(SendTo.Server)]
         public void PahPahRpc(ulong clientId)
         {
+            _hostPlayer.StopMovingRpc();
+            _guestPlayer.StopMovingRpc();
             AssignPointsRpc(5, clientId);
             RoundEndRpc(clientId, _hostPoints, _guestPoints);
         }
@@ -117,7 +167,13 @@ namespace Arena.Management
         {
             _hostPoints = hostPoints;
             _guestPoints = guestPoints;
-            EndRound();
+            var myPoints = AmHost ? hostPoints : guestPoints;
+            var opponentsPoints = AmHost ? guestPoints : hostPoints;
+            var myName = AmHost ? HostName : GuestName;
+            var opponentsName = AmHost ? GuestName : HostName;
+            UIManager.Instance.SetPoints(myName, myPoints, opponentsName, opponentsPoints);
+            EndRound(clientWinner == NetworkManager.LocalClientId);
         }
+
     }
 }
