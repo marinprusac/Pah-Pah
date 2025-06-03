@@ -21,6 +21,8 @@ namespace Arena.UI
         [SerializeField] private Camera uiCamera;
 
         [SerializeField] private Image reloadImage;
+        
+        [SerializeField] private TMP_Text gameEndText;
 
         private void OnEnable()
         {
@@ -142,6 +144,14 @@ namespace Arena.UI
                 fadeOutImage.color = lerpedColor;
                 yield return null;
             }
+        }
+
+        public void GameEnd(bool won)
+        {
+            HidePoints();
+            gameEndText.gameObject.SetActive(true);
+            gameEndText.text = won ? "You won!" : "You lost!";
+            
         }
     }
 }

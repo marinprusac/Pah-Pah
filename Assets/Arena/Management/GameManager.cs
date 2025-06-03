@@ -40,6 +40,8 @@ namespace Arena.Management
         private string GuestName => LobbyManager.Instance.GuestPlayerName;
 
         private readonly List<NetworkObject> _spawnedCoins = new();
+        
+        private static readonly int PointsToWin = 30;
 
         
         public void OnDisable()
@@ -66,16 +68,16 @@ namespace Arena.Management
         }
 
 
-        private void EndRound(bool won)
+        private void EndRound(bool won, bool gameOver)
         {
             if (!won)
             {
                 UIManager.Instance.LoserAnimation();
             }
-            StartCoroutine(DelayedShowResultsCoroutine());
+            StartCoroutine(DelayedShowResultsCoroutine(won, gameOver));
         }
         
-        private IEnumerator DelayedShowResultsCoroutine()
+        private IEnumerator DelayedShowResultsCoroutine(bool won, bool gameOver)
         {
             RandomMusicPlayer.Instance.FadeOutVolume();
             yield return new WaitForSeconds(3);
@@ -87,7 +89,16 @@ namespace Arena.Management
                 _guestPlayer.NetworkObject.Despawn();
                 DespawnCoins();
             }
-            UIManager.Instance.FadeIn(StartRound);
+
+            if (gameOver)
+            {
+                UIManager.Instance.GameEnd(won);
+            }
+            else
+            {
+                StartRound();
+                UIManager.Instance.FadeIn(() => { });
+            }
         }
         
         
@@ -171,7 +182,7 @@ namespace Arena.Management
             var myName = IsHost ? HostName : GuestName;
             var opponentsName = IsHost ? GuestName : HostName;
             UIManager.Instance.SetPoints(myName, myPoints, opponentsName, opponentsPoints);
-            EndRound(clientWinner == NetworkManager.LocalClientId);
+            EndRound(clientWinner == NetworkManager.LocalClientId, opponentsPoints >= PointsToWin || myPoints >= PointsToWin);
         }
 
     }
