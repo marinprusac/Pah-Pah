@@ -20,6 +20,8 @@ namespace Arena.UI
 
         [SerializeField] private Camera uiCamera;
 
+        [SerializeField] private Image reloadImage;
+
         private void OnEnable()
         {
             Instance = this;
@@ -45,8 +47,31 @@ namespace Arena.UI
             StartCoroutine(EnvironmentToWhiteCoroutine());
         }
 
+        public void FlashAnimation(Color color, float duration)
+        {
+            StartCoroutine(FlashCoroutine(color, duration));
+        }
+        
+        public void ReloadAnimation(float duration)
+        {
+            StartCoroutine(ReloadAnimationCoroutine(duration));
+        }
 
         
+        private static readonly int TimeLeftId = Shader.PropertyToID("_timeLeft");
+        
+        private IEnumerator ReloadAnimationCoroutine(float duration)
+        {
+            reloadImage.gameObject.SetActive(true);
+            for(float t = 0; t < duration; t += Time.deltaTime)
+            {
+                reloadImage.material.SetFloat(TimeLeftId, (duration-t)/duration);
+                yield return null;
+            }
+            reloadImage.gameObject.SetActive(false);
+        }
+
+
         public void SetPoints(string myName, int myPoints, string opponentsName, int opponentsPoints)
         {
             myPointsLabel.text = myName + "\n" + myPoints;
@@ -99,6 +124,22 @@ namespace Arena.UI
                 var lerpedColor = Color.Lerp(Color.black, Color.white, 1 - timeLeft);
                 RenderSettings.fogColor = lerpedColor;
                 RenderSettings.skybox.color = lerpedColor;
+                yield return null;
+            }
+        }
+
+        private IEnumerator FlashCoroutine(Color color, float duration)
+        {
+            for(float t = 0; t<duration/2;t+= Time.deltaTime)
+            {
+                var lerpedColor = Color.Lerp(new Color(0,0,0,0), color, t / (duration / 2));
+                fadeOutImage.color = lerpedColor;
+                yield return null;
+            }
+            for(float t = 0; t<duration/2;t+= Time.deltaTime)
+            {
+                var lerpedColor = Color.Lerp(color, new Color(0,0,0,0), t / (duration / 2));
+                fadeOutImage.color = lerpedColor;
                 yield return null;
             }
         }

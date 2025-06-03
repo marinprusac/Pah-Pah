@@ -1,4 +1,5 @@
 using Arena.Management;
+using Arena.UI;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -53,8 +54,16 @@ namespace Arena.Player
                 {
                     cooldown = cooldownDuration;
                     var result = _visionInstance.Check();
-                    if(result)
+                    if (result)
+                    {
                         GameManager.Instance.PahPahRpc(NetworkManager.LocalClientId);
+                        UIManager.Instance.FlashAnimation(new Color(1,1,1,0.5f), 0.75f);
+                    }
+                    else
+                    {
+                        UIManager.Instance.ReloadAnimation(cooldownDuration);
+                        UIManager.Instance.FlashAnimation(new Color(0,0,0,0.5f), 0.75f);
+                    }
                 }
             }
         }
