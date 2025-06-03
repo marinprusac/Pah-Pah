@@ -28,7 +28,7 @@ namespace Menu.UI
                 : LobbyManager.Instance.LobbyId;
             lobbyCodeLabel.text = code;
             firstPlayerLabel.text = LobbyManager.Instance.HostPlayerName;
-            secondPlayerLabel.text = LobbyManager.Instance.GuestPlayerName ?? "";
+            secondPlayerLabel.text = LobbyManager.Instance.GuestPlayerName ?? "..........";
             LobbyManager.GuestJoined += GuestJoined;
             LobbyManager.GuestLeft += GuestLeft;
             LobbyManager.LeftLobby += Removed;
@@ -57,7 +57,7 @@ namespace Menu.UI
 
         private void GuestLeft()
         {
-            secondPlayerLabel.text = "";
+            secondPlayerLabel.text = "..........";
             if (LobbyManager.Instance.AmHost) startGameButton.interactable = false;
         }
 
