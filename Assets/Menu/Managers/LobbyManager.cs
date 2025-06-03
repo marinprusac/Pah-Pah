@@ -135,7 +135,7 @@ namespace Menu.Managers
                     IsPrivate = !isPublic,
                     Player = player,
                 };
-                 var lobby = await LobbyService.Instance.CreateLobbyAsync(GUID.Generate().ToString(), 2, lobbyOptions);
+                 var lobby = await LobbyService.Instance.CreateLobbyAsync(Guid.NewGuid().ToString(), 2, lobbyOptions);
                  
                 Instance = new LobbyManager(lobby, true);
                 JoinedLobby?.Invoke();
