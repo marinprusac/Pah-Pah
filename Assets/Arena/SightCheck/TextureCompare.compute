@@ -11,6 +11,6 @@ void cs_main(uint3 id : SV_DispatchThreadID)
     float3 b = tex_b[id.xy].rgb;
     float diff = distance(a, b);
     
-    if (diff > 0.01)
+    if (diff > 0.05)
         InterlockedAdd(result[0], 1);
 }

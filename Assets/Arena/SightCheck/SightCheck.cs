@@ -59,7 +59,7 @@ namespace Arena
             // Synchronous GPU → CPU read
             _resultBuffer.GetData(_result); // This blocks
 
-            return _result[0] > 0;
+            return _result[0] > 10;
         }
 
         private void OnDestroy()
