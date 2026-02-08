@@ -8,6 +8,11 @@ Pah-Pah is a simple multiplayer hide & seek game built to **showcase and analyze
 
 This is *not* meant to be a polished commercial game, but a product of my Bachelor's thesis. It is a demo/proof-of-concept for education, testing, and security research.
 
+## Thesis
+The thesis is made in Croatian language. Here is the abstract in English:
+
+With an initial review of literature on networking and cheating in networked video games in the industry, tools and methods for cheating in such games were analyzed, and the most common vulnerabilities were demonstrated through a custom networked game developed in Unity. It was shown how tools like dnSpy allow code modification and exploitation of security flaws, such as point manipulation, wall hacks, and abuse of host privileges. Basic protection measures were proposed, including stronger serverside control and the use of anti-cheat software. The paper provides a practical overview of cheating issues and prevention strategies in modern networked games.
+
 ## Features
 
 - Multiplayer hide & seek gameplay  
